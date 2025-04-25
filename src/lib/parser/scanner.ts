@@ -1,110 +1,73 @@
-import type { ParseError } from "./parse.js";
+// src/parse/scanner.ts
+import type { ParseError } from './parse.js';
 
 export interface Segment {
-    keyword: 'head' | string;   // → "head" for leading text, otherwise raw keyword (no '@')
-    from: number;               // absolute start pos of keyword (or head)
-    to: number;                 // absolute end pos (exclusive, points at whitespace or EOS)
-    body: string;               // text immediately following keyword, trimmed-right
-    raw: string;                // full slice exactly as typed
-  }
+  keyword: 'head' | string;   // "head" for leading text, otherwise the keyword (no '@')
+  from: number;               // absolute start-offset of this segment
+  to: number;                 // absolute end-offset (exclusive)
+  body: string;               // text following the keyword (may contain spaces)
+  raw: string;                // exact slice [from, to)
+}
 
-  interface ScanResult {
-    segments: Segment[];
-    errors: ParseError[];
-  }
-
+interface ScanResult {
+  segments: Segment[];
+  errors: ParseError[];       // always [], kept for future symmetry
+}
 
 const isIdent = (c: string) => /[A-Za-z0-9_-]/.test(c);
 
-  
-  /**
-   * Naïve DFA:
-   *  • consume until `@` not escaped & not within quotes  -> flush as head/prev body
-   *  • read identifier    [A-Za-z0-9_-]+
-   *  • consume following run of chars until *next* unescaped `@` or EOS
-   *  • repeat
-   *
-   * Inside quoted spans we honour \" and \\.
-   */
-  export function scan(input: string): ScanResult {
-    const segments: Segment[] = [];
-    const errors: ParseError[] = [];
-  
-    let i = 0;                          // cursor
-    let segStart = 0;                   // where current segment starts
-    let inQuote = false;
-    let escaped = false;
-  
-    // helper: flush a segment [segStart,i) with given keyword
-    const pushSegment = (keyword: string, bodyStart: number, bodyEnd: number) => {
-      segments.push({
-        keyword: keyword as any,
-        body: input.slice(bodyStart, bodyEnd),
-        from: segStart,
-        to: i,
-        raw: input.slice(segStart, i)
-      });
-    };
-  
-    // 1) head: consume until first unescaped '@'
+/**
+ * Pass-1 scanner
+ *   • head  = everything before the first un-escaped '@'
+ *   • each keyword = '@' + IDENT
+ *   • body = runs until the next un-escaped '@' or EOS
+ *   • the only escape sequence recognised is '\@'  (=> literal '@')
+ */
+export function scan(input: string): ScanResult {
+  const segments: Segment[] = [];
+
+  let i = 0;                  // cursor
+  let segStart = 0;           // segment start
+
+  // helper to push a segment
+  const push = (keyword: string, bodyStart: number, bodyEnd: number) => {
+    segments.push({
+      keyword: keyword as any,
+      body: input.slice(bodyStart, bodyEnd),
+      from: segStart,
+      to: bodyEnd,
+      raw: input.slice(segStart, bodyEnd)
+    });
+  };
+
+  /* 1 ── HEAD ───────────────────────────────────────────── */
+  while (i < input.length) {
+    if (input[i] === '@' && (i === 0 || input[i - 1] !== '\\')) break;
+    i++;
+  }
+  if (i > 0) push('head', segStart, i);
+
+  /* 2 ── KEYWORD BLOCKS ────────────────────────────────── */
+  while (i < input.length) {
+    segStart = i;       // '@'
+    i++;                // skip '@'
+
+    // keyword ident
+    const kwStart = i;
+    while (i < input.length && isIdent(input[i])) i++;
+    const keyword = input.slice(kwStart, i);
+
+    // optional space after keyword
+    while (i < input.length && input[i] === ' ') i++;
+    const bodyStart = i;
+
+    // body until next un-escaped '@' or EOS
     while (i < input.length) {
-      const ch = input[i];
-      if (ch === '@' && !escaped) break;
-      escaped = ch === '\\' && !escaped;
-      ++i;
+      if (input[i] === '@' && input[i - 1] !== '\\') break;
+      i++;
     }
-    // push head if any text before @
-    if (i > 0) {
-      pushSegment('head', segStart, i); // body==raw for head
-    }
-  
-    // 2) walk the rest
-    while (i < input.length) {
-      segStart = i;          // '@' starts here
-      ++i;                   // skip '@'
-  
-      // read keyword identifier
-      const kwStart = i;
-      while (i < input.length && isIdent(input[i])) i++;
-      const keyword = input.slice(kwStart, i);
-  
-      // consume following whitespace after keyword (belongs to body)
-      while (i < input.length && input[i] === ' ') i++;
-      const bodyStart = i;
-  
-      // now read body until next *unescaped & unquoted* '@' or EOS
-      inQuote = false;
-      escaped = false;
-      while (i < input.length) {
-        const ch = input[i];
-  
-        if (escaped) {
-          escaped = false;            // treat char literally
-        } else if (ch === '\\') {
-          escaped = true;
-        } else if (ch === '"') {
-          inQuote = !inQuote;         // toggle quote
-        } else if (ch === '@' && !inQuote) {
-          break;                      // boundary of next segment
-        }
-        ++i;
-      }
-      const bodyEnd = i;              // body includes trailing spaces
-  
-      pushSegment(keyword, bodyStart, bodyEnd);
-    }
-  
-    // unterminated quote error?
-    if (inQuote) {
-      errors.push({
-        from: segStart,
-        to: input.length,
-        token: input.slice(segStart),
-        message: 'unterminated quote'
-      });
-    }
-  
-    return { segments, errors };
+    push(keyword, bodyStart, i);
   }
 
-  
+  return { segments, errors: [] };
+}

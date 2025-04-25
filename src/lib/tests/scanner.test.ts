@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { scan } from '../parser/scanner.js';         // ← update relative path if needed
+import { scan } from '../parser/scanner.js';
 
 /**
  * Helper to make the assertions terser.
@@ -13,72 +13,57 @@ function mapSegs(input: string) {
 describe('scanner – head & keyword splitting', () => {
 
   it('plain head only', () => {
-    const segs = mapSegs('Buy milk and bread');
-    expect(segs).toEqual([
+    expect(mapSegs('Buy milk and bread')).toEqual([
       ['head', 'Buy milk and bread']
     ]);
   });
 
   it('simple keyword + body', () => {
-    const segs = mapSegs('@kind note log');
-    expect(segs).toEqual([
+    expect(mapSegs('@kind note log')).toEqual([
       ['kind', 'note log']
     ]);
   });
 
   it('head followed by keyword', () => {
-    const segs = mapSegs('Project X @id 123');
-    expect(segs).toEqual([
+    expect(mapSegs('Project X @id 123')).toEqual([
       ['head', 'Project X '],
       ['id',   '123']
     ]);
   });
 
-  it('quoted body containing @', () => {
-    const segs = mapSegs('@content "foo@bar.com" @kind note');
-    expect(segs).toEqual([
-      ['content', '"foo@bar.com" '],   // trailing space is part of body
+  it('body with escaped @ inside quotes', () => {
+    expect(mapSegs('@content "foo\\@bar.com" @kind note')).toEqual([
+      ['content', '"foo\\@bar.com" '],   // trailing space is part of body
       ['kind',    'note']
     ]);
   });
 
   it('escaped @ outside quotes', () => {
-    const segs = mapSegs('@content foo\\@bar @name test');
-    expect(segs).toEqual([
+    expect(mapSegs('@content foo\\@bar @name test')).toEqual([
       ['content', 'foo\\@bar '],
       ['name',    'test']
     ]);
   });
 
-  it('escaped quote inside quoted body', () => {
-    const segs = mapSegs('@name "He said \\"hi\\"" @kind note');
-    expect(segs).toEqual([
-      ['name', '"He said \\"hi\\"" '],
-      ['kind', 'note']
-    ]);
-  });
-
   it('multiple keywords, mixed quoting', () => {
-    const q = 'head text @id a b @content "alpha @ beta" @in uid1* uid2';
-    const segs = mapSegs(q);
-    expect(segs).toEqual([
+    const q = 'head text @id a b @content "alpha \\@ beta" @in uid1* uid2';
+    expect(mapSegs(q)).toEqual([
       ['head',   'head text '],
       ['id',     'a b '],
-      ['content','"alpha @ beta" '],
+      ['content','"alpha \\@ beta" '],
       ['in',     'uid1* uid2']
     ]);
   });
 
-  it('unterminated quote yields scan error', () => {
-    const { segments, errors } = scan('@content "oops');
-    expect(errors.length).toBe(1);
-    expect(errors[0].message).toMatch(/unterminated/i);
-    // segments should still include best-effort slice
-    expect(segments[0].keyword).toBe('content');
+  it('double-escaped @ (\\\\@) keeps literal \\@ in body', () => {
+    expect(mapSegs('@name foo\\\\@bar')).toEqual([
+      ['name', 'foo\\\\@bar']
+    ]);
   });
 
-  // TODO: should we handle extra edge cases with weird sequences of @ like @@@?
-  // it('', () => {
-  // });
+  it('dangling back-slash at end of body is kept verbatim', () => {
+    expect(mapSegs('@content path\\')).toEqual([
+      ['content', 'path\\']
+    ]);
+  });
 });
-
