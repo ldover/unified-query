@@ -1,6 +1,6 @@
 {
 	"name": "unified-search",
-	"version": "1.13.4",
+	"version": "0.0.2",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build && npm run package",
@@ -20,10 +20,6 @@
 		".": {
 			"types": "./dist/index.d.ts",
 			"svelte": "./dist/index.js"
-		},
-		"./theme": {
-			"types": "./dist/theme/index.d.ts",
-			"import": "./dist/theme/index.js"
 		}
 	},
 	"files": [
