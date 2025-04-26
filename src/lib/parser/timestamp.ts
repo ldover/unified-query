@@ -1,5 +1,6 @@
 // src/parse/timestamp.ts
-import type { ParseError } from './parse.js';
+import type { Cmp, ParseError, Token } from './parse.js';
+import type { Segment } from './scanner.js';
 
 /** Accepted lexical forms (no leading < or >). */
 const DATE_RE      = /^\d{4}(?:\/(?:0?[1-9]|1[0-2])(?:\/(?:0?[1-9]|[12]\d|3[01]))?)?$/;
@@ -33,3 +34,57 @@ export function parseTimestampToken(token: string, pos: number): TSParseOk | TSP
     to: pos + token.length
   };
 }
+
+
+export interface TSOptions {
+  allowBoolean: boolean;          // completed / archived / deleted
+  keyword:      string;           // injected so raw slice stays correct
+  kindFilter?:  TimestampKind[];  // e.g. ['date'] for @date, ['time'] for @time
+}
+
+export const makeTimestampParser =
+  ({ keyword, allowBoolean, kindFilter }: TSOptions) =>
+  (seg: Segment) => {
+    const parts   = seg.body.trim().split(/\s+/).filter(Boolean);
+    const tokens: Token[] = [];
+    const errors: ParseError[] = [];
+
+    if (parts.length === 0) {
+      tokens.push({ keyword, parsed: [], from: seg.from, to: seg.to, raw: seg.raw });
+      return { tokens, errors };
+    }
+
+
+    // Boolean lane
+    if (allowBoolean && parts.length === 1 && /^(true|false)$/i.test(parts[0])) {
+      tokens.push({ keyword, parsed:[parts[0].toLowerCase()==='true'], from:seg.from, to:seg.to, raw:seg.raw });
+      return { tokens, errors };
+    }
+
+    // Date / time comparisons
+    const cmps: Cmp[] = [];
+    let cursor = seg.from + keyword.length + 2;
+
+    for (const raw of parts) {
+      const op  = raw[0] === '<' || raw[0] === '>' ? (raw[0] as '<'|'>') : undefined;
+      const val = op ? raw.slice(1) : raw;
+
+      const res = parseTimestampToken(val, cursor + (op ? 1 : 0));
+      cursor   += raw.length + 1;
+
+      if (res.ok && (!kindFilter || kindFilter.includes(res.kind))) {
+        cmps.push({ op, value: val });
+      } else {
+        // TODO: this message is too general. For @time keywork it should write invalid time token      
+        errors.push({
+          message: 'invalid date/time token',
+          token: raw,
+          from:   cursor - raw.length - 1,
+          to:     cursor - 1
+        });
+      }
+    }
+
+    tokens.push({ keyword, parsed: cmps, from: seg.from, to: seg.to, raw: seg.raw });
+    return { tokens, errors };
+  };

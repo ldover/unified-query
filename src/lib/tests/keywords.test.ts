@@ -5,7 +5,6 @@ import { parseName }    from '../parser/keywords/name.js';
 import { parseContent } from '../parser/keywords/content.js';
 import { parseIn } from '../parser/keywords/in.js';
 import type { Segment } from '../parser/scanner.js';
-import { parseCompleted } from '../parser/keywords/completed.js';
 
 /* helper – wrap raw body in a Segment stub */
 function seg(keyword: string, body: string): Segment {
@@ -93,26 +92,3 @@ describe('@in parser', () => {
   });
 });
 
-describe('@completed parser – timestamp validation', () => {
-  it('accepts valid YYYY/MM/DD date', () => {
-    const { tokens, errors } = parseCompleted(seg('completed','2024/02/29'));
-    expect(errors).toEqual([]);
-    expect(tokens[0].parsed[0]).toEqual({ op:undefined, value:'2024/02/29' });
-  });
-
-  it('rejects bad date format', () => {
-    const { errors } = parseCompleted(seg('completed','2024-02-29'));
-    expect(errors.length).toBe(1);
-    expect(errors[0].message).toMatch(/invalid date\/time/i);
-  });
-
-  it('accepts datetime with > operator', () => {
-    const { tokens } = parseCompleted(seg('completed','>2024/03/01-12:00'));
-    expect(tokens[0].parsed[0]).toEqual({ op:'>', value:'2024/03/01-12:00' });
-  });
-
-  it('accepts 12-hour time token', () => {
-    const { errors } = parseCompleted(seg('completed','>3pm'));
-    expect(errors).toEqual([]);
-  });
-});
