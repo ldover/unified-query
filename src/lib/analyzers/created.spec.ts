@@ -24,4 +24,33 @@ describe('@created analyzer (simple version)', () => {
     expect(seg.errors.length).toBe(1);
     expect(seg.errors[0].message).toMatch(/invalid token "true"/i);
   });
+
+  /* ---------------------------------------------------------------------- */
+  /* NEW tests                                                              */
+  /* ---------------------------------------------------------------------- */
+
+  it('collects comparison operators', () => {
+    const { result } = run('@created >2024/06/01 <2024/07');
+    expect(result.parsed).toEqual([
+      { op: '>', value: { y: 2024, m: 6, d: 1 } },
+      { op: '<', value: { y: 2024, m: 7            } }
+    ]);
+  });
+
+  // TODO: this one doesn't make sense, but maybe we let it fly at this layer?
+  it('accepts time, datetime and date in one query', () => {
+    const { result } = run('@created 12:00 2024/06/15-09:30 2024');
+    expect(result.parsed).toEqual([
+      { h: 12,  m: 0,        clock: '24h' },                         // time token
+      { y: 2024, m: 6, d: 15, h: 9,  min: 30 },                 // datetime
+      { y: 2024 }                                              // year-only date
+    ]);
+  });
+
+  it('flags a second "<" or ">" operator as an error', () => {
+    const { seg } = run('@created >2024 >2025');
+    // one semantic error expected (“duplicate '>' operator” or similar)
+    expect(seg.errors.length).toBe(1);
+    expect(seg.errors[0].message).toMatch(/[dD]uplicate/i);
+  });
 });
