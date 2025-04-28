@@ -1,13 +1,5 @@
 // src/parse/scanner.ts
-import type { ParseError } from './parse.js';
-
-export interface Segment {
-  keyword: 'head' | string;   // "head" for leading text, otherwise the keyword (no '@')
-  from: number;               // absolute start-offset of this segment
-  to: number;                 // absolute end-offset (exclusive)
-  body: string;               // text following the keyword (may contain spaces)
-  raw: string;                // exact slice [from, to)
-}
+import type { ParseError, Segment } from './types.js';
 
 interface ScanResult {
   segments: Segment[];
@@ -33,6 +25,8 @@ export function scan(input: string): ScanResult {
   const push = (keyword: string, bodyStart: number, bodyEnd: number) => {
     segments.push({
       keyword: keyword as any,
+      tokens: [],
+      errors: [],
       body: input.slice(bodyStart, bodyEnd),
       from: segStart,
       to: bodyEnd,

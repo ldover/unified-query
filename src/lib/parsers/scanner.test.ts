@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { scan } from '../parser/scanner.js';
+import { scan } from './scanner.js';
 
 /**
  * Helper to make the assertions terser.

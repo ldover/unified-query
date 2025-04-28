@@ -10,6 +10,7 @@ import {
 import { parseDateQueryArg, keywordToInterval, dateQueryToInterval  } from './parsers.js';
 import { highlightAtKeywords } from './plugins.js';
 import { theme } from './theme.js';
+import { searchLinter } from './lint.js';
 
 type Datetime = number;
 type Time = string;
@@ -256,6 +257,7 @@ export class Search {
           basicSetup,
           keymap.of(defaultKeymap),
           theme,
+          searchLinter,
           highlightAtKeywords,
           autocompletion({
             override: [
