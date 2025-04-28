@@ -2,7 +2,7 @@ type Keyword =
     | 'head'
     | 'id' | 'kind' | 'name' | 'content'
     | 'in'
-    | 'completed' | 'draft' | 'archived' | 'deleted'
+    | 'draft' | 'archived' | 'deleted'
     | 'done' | 'todo'
     | 'created' | 'updated' | 'changed'
     | 'date' | 'time'

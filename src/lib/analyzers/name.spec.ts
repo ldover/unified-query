@@ -21,5 +21,10 @@ describe('@name analyzer', () => {
     const { result } = run('@name "Hello World"')
     expect(result.parsed).toEqual('"Hello World"');
   });
+
+  it('converts different tokens into raw string', () => {
+    const { result } = run('@name true 2024')
+    expect(result.parsed).toEqual('true 2024');
+  });
 });
 

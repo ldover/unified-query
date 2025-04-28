@@ -226,11 +226,12 @@ function toSearchQuery(args: ArgMap, collections: Collection[]): Partial<SearchQ
 
 // Define available keywords
 const KEYWORDS = [
-    ...KINDS,
     'created',
     'deleted',
     'updated',
     'changed',
+    'done',
+    'todo',
     'today',
     'yesterday',
     'in',

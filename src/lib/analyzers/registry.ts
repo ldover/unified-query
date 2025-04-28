@@ -6,7 +6,7 @@ import type { ParsedKeyword, Segment } from '$lib/parsers/types.js';
 /* -------------------------------------------------------------------------- */
 import { analyzeArchived  } from './archived.js';
 import { analyzeChanged   } from './changed.js';
-import { analyzeCompleted } from './completed.js';
+import { analyzeDone } from './done.js';
 import { analyzeContent   } from './content.js';
 import { analyzeCreated   } from './created.js';
 import { analyzeDate      } from './date.js';
@@ -45,6 +45,6 @@ export const registry: Record<string, KeywordAnalyser> = {
   time:     analyzeTime,
 
   /* workflow -------------------------------------------------------------- */
-  completed: analyzeCompleted,
+  completed: analyzeDone,
   // done / todo / draft, sort, limit … will be added as their analysers land
 };
