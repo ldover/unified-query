@@ -1,25 +1,50 @@
-// src/parse/registry.ts
+// src/lib/analyzers/registry.ts
+import type { ParsedKeyword, Segment } from '$lib/parsers/types.js';
 
-import type { ParsedKeyword, Segment } from "$lib/parsers/types.js";
-import { analyzeContent } from "./content.js";
-import { analyzeCreated } from "./created.js";
-import { analyzeId } from "./id.js";
-import { analyzeName } from "./name.js";
+/* -------------------------------------------------------------------------- */
+/* Individual analysers                                                       */
+/* -------------------------------------------------------------------------- */
+import { analyzeArchived  } from './archived.js';
+import { analyzeChanged   } from './changed.js';
+import { analyzeCompleted } from './completed.js';
+import { analyzeContent   } from './content.js';
+import { analyzeCreated   } from './created.js';
+import { analyzeDate      } from './date.js';
+import { analyzeDeleted   } from './deleted.js';
+import { analyzeId        } from './id.js';
+import { analyzeIn        } from './in.js';
+import { analyzeName      } from './name.js';
+import { analyzeTime      } from './time.js';
+import { analyzeUpdated   } from './updated.js';
 
-/**
- * Signature every analyser must follow.
- * It receives a fully-tokenised Segment and returns a ParsedKeyword
- * (it may also push errors into `segment.errors`).
- */
+/* -------------------------------------------------------------------------- */
+/* Shared signature                                                           */
+/* -------------------------------------------------------------------------- */
 export type KeywordAnalyser = (seg: Segment) => ParsedKeyword;
 
-/**
- * Central dispatch table: keyword-string ⇒ analyser function.
- * Add new entries here as you implement more keywords.
- */
+/* -------------------------------------------------------------------------- */
+/* Central dispatch table: keyword → analyser                                 */
+/* -------------------------------------------------------------------------- */
 export const registry: Record<string, KeywordAnalyser> = {
-  id: analyzeId,
-  name: analyzeName,
-  content: analyzeContent,
-  created: analyzeCreated
+  /* identity / meta ------------------------------------------------------- */
+  id:       analyzeId,
+  name:     analyzeName,
+  content:  analyzeContent,
+
+  /* relation -------------------------------------------------------------- */
+  in:       analyzeIn,
+
+  /* timestamps ------------------------------------------------------------ */
+  created:  analyzeCreated,
+  updated:  analyzeUpdated,
+  changed:  analyzeChanged,
+  deleted:  analyzeDeleted,
+  archived: analyzeArchived,
+
+  date:     analyzeDate,
+  time:     analyzeTime,
+
+  /* workflow -------------------------------------------------------------- */
+  completed: analyzeCompleted,
+  // done / todo / draft, sort, limit … will be added as their analysers land
 };

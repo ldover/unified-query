@@ -4,9 +4,10 @@ import type { LexToken, Segment } from "./types.js";
 import { dateParser, datetimeParser, timeParser } from './date.js'
 import { booleanParser } from "./boolean.js";
 import { stringParser } from "./string.js";
+import { uuidParser } from "./id.js";
 
 
-const microParsers = [dateParser, datetimeParser, timeParser, booleanParser];
+const microParsers = [dateParser, datetimeParser, timeParser, booleanParser, uuidParser];
 
 export function tokenizeBody(seg: Segment): LexToken[] {
     // start after “@” + keyword + single space

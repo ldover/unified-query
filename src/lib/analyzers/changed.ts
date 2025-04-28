@@ -1,14 +1,14 @@
-// analyzers/created.ts
+// analyzers/changed.ts
 import type { TimestampValue, ParsedKeyword, Segment } from '../parsers/types.js';
 import { timestampAnalyzer } from './timestamp.js';
 
-export function analyzeCreated(seg: Segment): ParsedKeyword<'created', TimestampValue[]> {
+export function analyzeChanged(seg: Segment): ParsedKeyword<'changed', TimestampValue[]> {
   const { parsed, errors } = timestampAnalyzer(seg, { allowBoolean: false });
   seg.errors.push(...errors);
 
   return {
-    keyword: 'created',
-    parsed: parsed as TimestampValue[],   // ensured by allowBoolean=false
+    keyword: 'changed',
+    parsed: parsed as TimestampValue[],
     from: seg.from,
     to:   seg.to,
     raw:  seg.raw,

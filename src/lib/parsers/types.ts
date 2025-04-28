@@ -22,6 +22,12 @@ interface BaseTok {
   export type TimeValue     = { h: number; m?: number; clock: '24h' | '12h' };
   export type DateTimeValue = { y: number; m: number; d: number; h: number; min: number };
   
+  export type TimestampValue =
+  | DateValue
+  | TimeValue
+  | DateTimeValue
+  | Cmp<DateValue | TimeValue | DateTimeValue>;
+  
   export type CmpOp = '<' | '>';
   
   /* ----- lexical token union ----- */

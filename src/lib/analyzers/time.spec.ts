@@ -28,6 +28,6 @@ describe('@time analyzer', () => {
   it('flags non-time tokens as invalid', () => {
     const { seg } = run('@time 2025/04/26 12:00', analyzeTime);
     expect(seg.errors).toHaveLength(1);
-    expect(seg.errors[0].message).toMatch(/invalid token "2025\\/04\\/26"/i);
+    expect(seg.errors[0].message).toContain('invalid token "2025/04/26"');
   });
 });
