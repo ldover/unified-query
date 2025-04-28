@@ -3,6 +3,7 @@ import type {
     DateValue,
     TimeValue,
     DateTimeValue,
+    DateUtility,
     Cmp,
     LexToken,
     ParseError,
@@ -10,136 +11,134 @@ import type {
     TimestampValue,
   } from '../parsers/types.js';
   
-  /**
-   * Shared analyser for keywords that accept timestamp tokens and (optionally)
-   * a single boolean flag.
-   *
-   * @param seg          The segment produced by scanner+tokeniser.
-   * @param allowBoolean Whether this keyword should accept a boolean instead of
-   *                     timestamp tokens (eg. @deleted).
-   *
-   * @returns `{ parsed, errors }`
-   *          • `parsed` is either:
-   *              – `undefined`   when there were no tokens at all
-   *              – `boolean`     if a boolean was supplied / defaulted
-   *              – `TimestampValue[]` array of timestamp or comparison objects
-   *          • `errors`   list of semantic errors generated inside the helper
-   */
+  /* ------------------------------------------------------------ */
+  /* helper union used by callers                                 */
+  /* ------------------------------------------------------------ */
+  type Acceptable =
+    | TimestampValue                // date / time / datetime  (unchanged)
+    | DateUtility;                  // single utility object
+  
+  /* -------------------------------------------------------------------------- */
+  /* analyser                                                                   */
+  /* -------------------------------------------------------------------------- */
   export function timestampAnalyzer(
     seg: Segment,
     { allowBoolean = false }: { allowBoolean?: boolean }
-  ): { parsed: boolean | TimestampValue[] | undefined; errors: ParseError[] } {
-
+  ): { parsed: boolean | Acceptable[] | DateUtility | undefined; errors: ParseError[] } {
   
-    const timestamps: TimestampValue[] = [];
+    const timestamps: Acceptable[] = [];
     const errors: ParseError[] = [];
   
-    /* Flags for “one per operator” invariant */
+    /* operator duplication guards */
     let seenLt = false;
     let seenGt = false;
   
-    /* Boolean branch control */
+    /* utility token exclusive branch */
+    let utilValue: DateUtility | undefined;
+  
+    /* boolean branch */
     let booleanValue: boolean | undefined;
   
-    /* ---------------------------------------------------------------------- */
-    /* Walk tokens                                                            */
-    /* ---------------------------------------------------------------------- */
-    for (const tok of seg.tokens) {
-      /* ---------------- timestamp tokens ---------------- */
-      if (
-        tok.kind === 'date' ||
-        tok.kind === 'time' ||
-        tok.kind === 'datetime'
-      ) {
-        if (booleanValue !== undefined) {
-          errors.push(combineErr(tok));
-          continue;
-        }
+    /* ------------------------------------------------------------------ */
+    /* iterate with index so we can enforce “utility must be first”       */
+    /* ------------------------------------------------------------------ */
+    seg.tokens.forEach((tok, idx) => {
+      /* -------- date / time / datetime -------------------------------- */
+      if (tok.kind === 'date' || tok.kind === 'time' || tok.kind === 'datetime') {
+        if (utilValue) { errors.push(utilMixErr(tok)); return; }
+        if (booleanValue !== undefined) { errors.push(combineErr(tok)); return; }
   
-        // handle comparison op
         if (tok.op) {
           if (tok.op === '<') {
-            if (seenLt) {
-              errors.push(dupErr(tok, '<'));
-              continue;
-            }
+            if (seenLt) { errors.push(dupErr(tok, '<')); return; }
             seenLt = true;
           } else {
-            if (seenGt) {
-              errors.push(dupErr(tok, '>'));
-              continue;
-            }
+            if (seenGt) { errors.push(dupErr(tok, '>')); return; }
             seenGt = true;
           }
           timestamps.push({ op: tok.op, value: tok.value });
         } else {
           timestamps.push(tok.value as DateValue | TimeValue | DateTimeValue);
         }
-        continue;
+        return;
       }
   
-      /* ---------------- boolean token ---------------- */
+      /* -------- date utility ------------------------------------------ */
+      if (tok.kind === 'dateutil') {
+        // must be first and exclusive; utilities cannot have op
+        if (idx !== 0)                { errors.push(utilFirstErr(tok)); return; }
+        if (tok.op)                   { errors.push(utilOpErr(tok));    return; }
+        if (seg.tokens.length > 1)    { errors.push(utilMixErr(tok));   return; }
+        utilValue = tok.value as DateUtility;
+        return;
+      }
+  
+      /* -------- boolean ------------------------------------------------ */
       if (allowBoolean && tok.kind === 'boolean') {
+        if (utilValue) { errors.push(utilMixErr(tok)); return; }
+        if (timestamps.length) { errors.push(combineErr(tok)); return; }
         if (booleanValue !== undefined) {
           errors.push({
             message: 'duplicate boolean flag',
-            token: tok.raw,
-            from: tok.from,
-            to: tok.to,
+            token: tok.raw, from: tok.from, to: tok.to,
           });
-          continue;
-        }
-        if (timestamps.length) {
-          errors.push(combineErr(tok));
-          continue;
+          return;
         }
         booleanValue = tok.value;
-        continue;
+        return;
       }
   
-      /* ---------------- everything else ---------------- */
+      /* -------- anything else ----------------------------------------- */
       errors.push({
         message: `invalid token "${tok.raw}"`,
-        token: tok.raw,
-        from: tok.from,
-        to: tok.to,
+        token: tok.raw, from: tok.from, to: tok.to,
       });
-    }
+    });
   
-    /* ---------------------------------------------------------------------- */
-    /* Derive final parsed value                                              */
-    /* ---------------------------------------------------------------------- */
-    let parsed: boolean | TimestampValue[] | undefined;
-    if (booleanValue !== undefined) {
-      parsed = booleanValue;
-    } else if (timestamps.length) {
-      parsed = timestamps;
-    } else {
-      // no tokens provided
-      parsed = allowBoolean ? undefined : timestamps; // undefined for @deleted
-    }
+    /* ------------------------------------------------------------------ */
+    /* derive parsed result                                               */
+    /* ------------------------------------------------------------------ */
+    let parsed: boolean | Acceptable[] | DateUtility | undefined;
   
-    // caller decides whether to push errors into seg.errors
+    if (utilValue)                 parsed = utilValue;
+    else if (booleanValue !== undefined) parsed = booleanValue;
+    else if (timestamps.length)    parsed = timestamps;
+    else if (allowBoolean)         parsed = undefined;   // no-arg case for @deleted
+    else                           parsed = timestamps;  // empty list (created/etc.)
+  
     return { parsed, errors };
   
-    /* -------------------------------------------------------------------- */
-    /* helpers                                                              */
-    /* -------------------------------------------------------------------- */
+    /* ------------------------------------------------------------------ */
+    /* helpers                                                            */
+    /* ------------------------------------------------------------------ */
     function dupErr(tok: LexToken, op: string): ParseError {
       return {
         message: `duplicate "${op}" operator`,
-        token: tok.raw,
-        from: tok.from,
-        to: tok.to,
+        token: tok.raw, from: tok.from, to: tok.to,
       };
     }
-  
     function combineErr(tok: LexToken): ParseError {
       return {
         message: 'cannot combine boolean flag with timestamps',
-        token: tok.raw,
-        from: tok.from,
-        to: tok.to,
+        token: tok.raw, from: tok.from, to: tok.to,
+      };
+    }
+    function utilFirstErr(tok: LexToken): ParseError {
+      return {
+        message: 'utility value must be first token',
+        token: tok.raw, from: tok.from, to: tok.to,
+      };
+    }
+    function utilMixErr(tok: LexToken): ParseError {
+      return {
+        message: 'cannot combine utility value with other arguments',
+        token: tok.raw, from: tok.from, to: tok.to,
+      };
+    }
+    function utilOpErr(tok: LexToken): ParseError {
+      return {
+        message: 'comparison operators are not allowed on utility values',
+        token: tok.raw, from: tok.from, to: tok.to,
       };
     }
   }

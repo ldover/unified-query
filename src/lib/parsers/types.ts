@@ -16,6 +16,20 @@ interface BaseTok {
     to:   number;
     raw:  string;
   }
+
+/** single calendar points */
+export type DatePointUtility =
+  | { util: 'today' }
+  | { util: 'yesterday' };
+
+/** closed interval ending “now” */
+export type DateRangeUtility = {
+  util: 'last';
+  unit: 'days' | 'weeks' | 'months' | 'years';
+  n: number;
+};
+
+export type DateUtility = DatePointUtility | DateRangeUtility
   
   /* ----- structured values ----- */
   export type DateValue     = { y: number; m?: number; d?: number };
@@ -35,6 +49,7 @@ interface BaseTok {
     | ({ kind:'date';     op?: CmpOp; value: DateValue     } & BaseTok)
     | ({ kind:'time';     op?: CmpOp; value: TimeValue     } & BaseTok)
     | ({ kind:'datetime'; op?: CmpOp; value: DateTimeValue } & BaseTok)
+    | ({ kind: 'dateutil'; op?: CmpOp; value: DateUtility } & BaseTok)
     | ({ kind:'boolean';  value: boolean                   } & BaseTok)
     // TODO: we also have "*" after the UUID, which is applicable in '@in'
     | ({ kind:'uuid';     value: string                    } & BaseTok)
