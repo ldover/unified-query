@@ -2,6 +2,8 @@
 
 import type { LexToken, Segment } from "./types.js";
 import { dateParser, datetimeParser, timeParser } from './date.js'
+import { booleanParser } from "./boolean.js";
+import { stringParser } from "./string.js";
 
 
 const microParsers = [dateParser, datetimeParser, timeParser, booleanParser];
@@ -24,6 +26,6 @@ export function lexWord(word: string, pos: number): LexToken {
         const tok = fn(word, pos);
         if (tok) return tok;          // return first match
     }
-    // fallback:
-    return { kind: 'string', value: word, raw: word, from: pos, to: pos + word.length };
+
+    return stringParser(word, pos)!
 }
