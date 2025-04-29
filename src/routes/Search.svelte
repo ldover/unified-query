@@ -21,9 +21,7 @@
 </div>
 
 <style>
-    /* style your highlighted @keywords */
-    :global(.cm-atKeyword) {
-        color: #0070f3;
-        font-weight: 600;
-    }
+	:global(.cm-qs-keyword) { color:#268bd2; font-weight:600; }
+	:global(.cm-qs-arg)     { color:#586e75; }
+	:global(.cm-qs-ignored) { color:#93a1a1 !important; }   /* gray entire duplicate line */
 </style>

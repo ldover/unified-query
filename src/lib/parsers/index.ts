@@ -21,11 +21,14 @@ export function parse(input: string): ParseResult {
     seg.tokens = tokenizeBody(seg);                                           // fills seg.tokens[]
 
     const kw = seg.keyword;                                      // 'head' or real
-    const analyse = registry[kw as keyof typeof registry];
-    if (!analyse) throw new Error('Unknown keywords should be ignored (seg.ignored)')
-
-    const parsed = analyse(seg as Segment);
-    keywords.push(parsed);
+    if (kw != 'head') {
+      const analyse = registry[kw as keyof typeof registry];
+      if (!analyse) throw new Error('Unknown keywords should be ignored (seg.ignored)')
+      const parsed = analyse(seg as Segment);
+      keywords.push(parsed);
+    } else {
+      keywords.push({...seg, keyword: 'head', parsed: seg.raw});
+    }
   }
 
   /* collect semantic errors from every segment */

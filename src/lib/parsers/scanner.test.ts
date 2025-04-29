@@ -66,4 +66,31 @@ describe('scanner – head & keyword splitting', () => {
       ['content', 'path\\']
     ]);
   });
+
+  it('treats a stray "@" with no identifier as head', () => {
+    // the trailing '@' becomes its own head segment
+    expect(mapSegs('@sort created@')).toEqual([
+      ['sort',   'created'],
+      ['head',   '@']
+    ]);
+  });
+
+  it('handles a space before a stray "@" as head', () => {
+    expect(mapSegs('@sort created @')).toEqual([
+      ['sort', 'created '],
+      ['head', '@']
+    ]);
+  });
+
+  it('marks a stray "@" head segment as ignored', () => {
+    const res = scan('@sort created@');
+    // first segment is normal
+    expect(res.segments[0].keyword).toBe('sort');
+    // second segment is the stray "@"
+    const tail = res.segments[1];
+    expect(tail.keyword).toBe('head');
+    expect(tail.body).toBe('@');
+    // and it should be ignored
+    expect(tail.ignored).toBe(true);
+  });
 });

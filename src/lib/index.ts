@@ -8,7 +8,7 @@ import {
   CompletionContext,
 } from '@codemirror/autocomplete';
 import { parseDateQueryArg, keywordToInterval, dateQueryToInterval  } from './parsers.js';
-import { highlightAtKeywords } from './plugins.js';
+import { highlighter } from './plugins.js';
 import { theme } from './theme.js';
 import { searchLinter } from './lint.js';
 
@@ -253,13 +253,13 @@ export class Search {
   constructor(private opts: SearchOptions) {
     this.view = new EditorView({
       state: EditorState.create({
-        doc: '',
+        doc: '@sort created',
         extensions: [
           basicSetup,
           keymap.of(defaultKeymap),
           theme,
           searchLinter,
-          highlightAtKeywords,
+          highlighter,
           autocompletion({
             override: [
               this.keywordCompletion.bind(this),

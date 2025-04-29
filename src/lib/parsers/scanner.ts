@@ -71,6 +71,22 @@ export function scan(input: string): ScanResult {
     while (i < input.length && isIdent(input[i])) i++;
     const keyword = input.slice(kwStart, i);
 
+    // stray '@' with no following ident → treat as literal head segment
+    // TODO: this is just a patch; should think how to handle empty keywords: "@"
+    if (!keyword) {
+      segments.push({
+        keyword: 'head',
+        tokens:  [],
+        errors:  [],
+        body:    '@',
+        from:    segStart,
+        to:      segStart + 1,
+        raw:     '@',
+        ignored: true
+      });
+      continue;         // don't try to parse a real keyword here
+    }
+
     // optional space
     while (i < input.length && input[i] === ' ') i++;
     const bodyStart = i;
