@@ -99,4 +99,5 @@ export interface Segment {
     to: number;                 // absolute end-offset (exclusive)
     body: string;               // text following the keyword (may contain spaces)
     raw: string;                // exact slice [from, to)
+    ignored: boolean            // for duplicate or unknown keywords
   }

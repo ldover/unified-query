@@ -16,6 +16,9 @@ import { analyzeIn        } from './in.js';
 import { analyzeName      } from './name.js';
 import { analyzeTime      } from './time.js';
 import { analyzeUpdated   } from './updated.js';
+import { analyzeSort } from './sort.js';
+import { analyzeDraft } from './draft.js';
+import { analyzeTodo } from './todo.js';
 
 /* -------------------------------------------------------------------------- */
 /* Shared signature                                                           */
@@ -45,6 +48,9 @@ export const registry: Record<string, KeywordAnalyser> = {
   time:     analyzeTime,
 
   /* workflow -------------------------------------------------------------- */
-  completed: analyzeDone,
-  // done / todo / draft, sort, limit … will be added as their analysers land
+  done: analyzeDone,
+  sort: analyzeSort,
+  draft: analyzeDraft,
+  todo: analyzeTodo,
+  // TODO: add @limit analyzer
 };

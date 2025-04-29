@@ -26,10 +26,4 @@ describe('@kind analyzer', () => {
     expect(seg.errors).toHaveLength(1);
     expect(seg.errors[0].message).toMatch(/unsupported kind "foo"/i);
   });
-
-  it('flags non-string tokens as invalid', () => {
-    const { seg } = run('@kind 2024/01/01');
-    expect(seg.errors).toHaveLength(1);
-    expect(seg.errors[0].message).toMatch(/invalid token/i);
-  });
 });

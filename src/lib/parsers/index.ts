@@ -16,10 +16,13 @@ export function parse(input: string): ParseResult {
 
   /* 2. tokenise + semantic analyse for each segment ---------------------- */
   for (const seg of segments) {
+    if (seg.ignored) continue;           // duplicates skipped
+
     seg.tokens = tokenizeBody(seg);                                           // fills seg.tokens[]
 
     const kw = seg.keyword;                                      // 'head' or real
     const analyse = registry[kw as keyof typeof registry];
+    if (!analyse) throw new Error('Unknown keywords should be ignored (seg.ignored)')
 
     const parsed = analyse(seg as Segment);
     keywords.push(parsed);
