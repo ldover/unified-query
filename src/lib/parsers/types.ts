@@ -51,9 +51,12 @@ export type DateUtility = DatePointUtility | DateRangeUtility
     | ({ kind:'datetime'; op?: CmpOp; value: DateTimeValue } & BaseTok)
     | ({ kind: 'dateutil'; op?: CmpOp; value: DateUtility } & BaseTok)
     | ({ kind:'boolean';  value: boolean                   } & BaseTok)
-    // TODO: we also have "*" after the UUID, which is applicable in '@in'
-    | ({ kind:'uuid';     value: string                    } & BaseTok)
-    | ({ kind:'string';   value: string                    } & BaseTok);   // fallback
+    | ({
+      kind: 'uuid';
+      value: string;        // canonical UUID
+      deep: boolean;       // `true` when the original token ended with "*"
+    } & BaseTok)
+    | ({ kind:'string';   value: string                    } & BaseTok); 
 
 
 /* ---------- helper signature each micro-parser implements ---------- */
