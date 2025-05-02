@@ -19,6 +19,7 @@ import { analyzeUpdated   } from './updated.js';
 import { analyzeSort } from './sort.js';
 import { analyzeDraft } from './draft.js';
 import { analyzeTodo } from './todo.js';
+import { analyzeKind } from './kind.js';
 
 /* -------------------------------------------------------------------------- */
 /* Shared signature                                                           */
@@ -52,5 +53,6 @@ export const registry: Record<string, KeywordAnalyser> = {
   sort: analyzeSort,
   draft: analyzeDraft,
   todo: analyzeTodo,
+  kind: analyzeKind,
   // TODO: add @limit analyzer
 };

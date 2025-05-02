@@ -1,12 +1,20 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Search } from '$lib/index.js';
+	import { parse } from '$lib/parsers/index.js';
+	import { toQuery } from '$lib/query.js';
 
 	let editorContainer: HTMLDivElement;
 
 	
 	onMount(() => {
-        const search = new Search({element: editorContainer, onChange: console.log })
+        const search = new Search({element: editorContainer, onChange: (query) => {
+			const parsed = parse(query)
+
+			// TODO: note that we could use parsed.keywords instead of parsed segments
+			console.log(toQuery(parsed))
+
+		} })
         search.setCollections(['collection 1', 'collection 2', 'collection 3'].map(c => ({id: c, name: c})))
 	});
 </script>

@@ -5,6 +5,7 @@ import type {
     Segment,
     ParseError,
     ParsedKeyword,
+    Cmp,
   } from '../parsers/types.js';
   
   /**
@@ -14,13 +15,17 @@ import type {
    */
   export function analyzeTime(
     seg: Segment
-  ): ParsedKeyword<'time', TimeValue[]> {
-    const times: TimeValue[] = [];
+  ): ParsedKeyword<'time', (TimeValue | Cmp<TimeValue>)[] > {
+    const times: (TimeValue | Cmp<TimeValue>)[] = [];
     const errors: ParseError[] = [];
   
     for (const tok of seg.tokens) {
       if (tok.kind === 'time') {
-        times.push(tok.value as TimeValue);
+        if (tok.op) {
+          times.push({op: tok.op, ...tok.value })
+        } else {
+          times.push(tok.value);
+        }
         continue;
       }
   

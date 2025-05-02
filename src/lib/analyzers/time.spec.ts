@@ -15,12 +15,13 @@ function run(str: string, analyzer) {
 /* -------------------------------------------------------------------------- */
 describe('@time analyzer', () => {
   it('collects multiple time tokens', () => {
-    const { result, seg } = run('@time 12 09:15 3pm', analyzeTime);
+    const { result, seg } = run('@time 12 09:15 3pm >7', analyzeTime);
 
     expect(result.parsed).toEqual([
       { h: 12, clock: '24h' },
       { h: 9,  m: 15, clock: '24h' },
       { h: 15, clock: '12h' },               // 3 pm normalised to 15h by parser
+      { h: 7, clock: '24h', op: '>' },
     ]);
     expect(seg.errors).toHaveLength(0);
   });

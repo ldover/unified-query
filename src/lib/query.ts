@@ -11,6 +11,8 @@ import type {
   DateTimeValue,
   CmpOp,
   TimeValue,
+  ParseResult,
+  ParsedKeyword,
 } from './parsers/types.js';
 import moment from 'moment';
 
@@ -85,45 +87,54 @@ type SortField = 'created_at' | 'updated_at' | 'deleted_at' |
     /*                            main converter                              */
     /* ======================================================================= */
     
-    export function toQuery(parsed: Segment[]): SearchQuery {
+    export function toQuery(res: ParseResult): SearchQuery {
+      const findSeg = (k: ParsedKeyword) => res.segments.find(s => s.keyword == k.keyword) as Segment
+
       const q: SearchQuery = {};
     
-      for (const seg of parsed) {
-        if (seg.ignored) continue;
+      for (const seg of res.keywords) {
         const kw = seg.keyword as Keyword;
     
         switch (kw) {
           case 'head':
           case 'name':
-            q.name = seg.body.trim();
+            q.name = seg.parsed as string
             break;
     
           case 'content':
-            q.content = seg.body.trim();
+            q.content = seg.parsed as string
             break;
     
           case 'id':
-            q.id = seg.tokens.filter((t) => t.kind === 'uuid').map((t: any) => t.value);
+            if ((seg.parsed as string[]).length) {
+                q.id = seg.parsed as string[]
+            }
             break;
     
           case 'kind':
-            q.kind = seg.tokens.filter((t) => t.kind === 'string').map((t: any) => t.value);
+            if ((seg.parsed as string[]).length) {
+                q.kind = seg.parsed as string[]
+            }
             break;
     
           case 'in':
-            q.parent = seg.tokens.filter((t) => t.kind === 'uuid').map((t: any) => t.value);
+            if ((seg.parsed as ({id: string, deep: boolean})[]).length) {
+                // TODO if uuid's deep op (*) is present will have to include all collections 
+                // in that parent
+                q.parent = (seg.parsed as ({id: string, deep: boolean})[]).map(r => r.id)
+            }
             break;
     
           case 'draft':
-            q.draft = parseBooleanKeyword(seg);
+            q.draft = parseBooleanKeyword(findSeg(seg));
             break;
     
           case 'archived':
-            parseBooleanOrTimestamp('archived', seg, q);
+            parseBooleanOrTimestamp('archived', findSeg(seg), q);
             break;
     
           case 'deleted':
-            parseBooleanOrTimestamp('deleted', seg, q);
+            parseBooleanOrTimestamp('deleted', findSeg(seg), q);
             break;
     
           case 'todo':
@@ -132,39 +143,38 @@ type SortField = 'created_at' | 'updated_at' | 'deleted_at' |
     
           case 'done':
             q.completed = true;
-            applyTimestampIfPresent('completed_at', seg, q);
+            applyTimestampIfPresent('completed_at', findSeg(seg), q);
             break;
     
           case 'created':
           case 'updated':
-          case 'deleted':
-          case 'archived':
           case 'changed': {
             const f = `${kw}_at` as keyof SearchQuery;
-            const iv = timestampSegmentToInterval(seg);
+            const iv = timestampSegmentToInterval(findSeg(seg));
             if (iv) mergeIntervalField(q, f, iv);
             break;
           }
     
           case 'date': {
-            const iv = dateOrTimeSegmentToInterval(seg, 'date');
+            const iv = dateOrTimeSegmentToInterval(findSeg(seg), 'date');
             if (iv) q.date = iv;
             break;
           }
     
           case 'time': {
-            const iv = dateOrTimeSegmentToInterval(seg, 'time');
+            const iv = dateOrTimeSegmentToInterval(findSeg(seg), 'time');
             if (iv) q.time = iv;
             break;
           }
     
           case 'sort':
-            q.sort = parseSort(seg);
+            q.sort = parseSort(findSeg(seg));
             break;
     
-          case 'limit':
-            q.limit = parseInt(seg.body.trim(), 10);
-            break;
+            // TODO: implement when added
+        //   case 'limit':
+            // q.limit = parseInt(seg.body.trim(), 10);
+            // break;
     
           default:
             // ignore unknown or future keywords for now
@@ -175,6 +185,7 @@ type SortField = 'created_at' | 'updated_at' | 'deleted_at' |
       return q;
     }
     
+    // TODO: how does this work?
     function mergeIntervalField(q: SearchQuery, field: keyof SearchQuery, iv: [number, number]) {
       const prev = q[field] as [number, number] | undefined;
       if (!prev) {
