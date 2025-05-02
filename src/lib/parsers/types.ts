@@ -1,4 +1,4 @@
-type Keyword =
+export type Keyword =
     | 'head'
     | 'id' | 'kind' | 'name' | 'content'
     | 'in'
