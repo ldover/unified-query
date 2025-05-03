@@ -1,5 +1,6 @@
 // query.ts
 
+import { KINDS } from './analyzers/kind.js';
 import type {
   Segment,
   LexToken,
@@ -92,49 +93,49 @@ type SortField = 'created_at' | 'updated_at' | 'deleted_at' |
 
       const q: SearchQuery = {};
     
-      for (const seg of res.keywords) {
-        const kw = seg.keyword as Keyword;
+      for (const parsedKw of res.keywords) {
+        const kw = parsedKw.keyword as Keyword;
     
         switch (kw) {
           case 'head':
           case 'name':
-            q.name = seg.parsed as string
+            q.name = parsedKw.parsed as string
             break;
     
           case 'content':
-            q.content = seg.parsed as string
+            q.content = parsedKw.parsed as string
             break;
     
           case 'id':
-            if ((seg.parsed as string[]).length) {
-                q.id = seg.parsed as string[]
+            if ((parsedKw.parsed as string[]).length) {
+                q.id = parsedKw.parsed as string[]
             }
             break;
     
           case 'kind':
-            if ((seg.parsed as string[]).length) {
-                q.kind = seg.parsed as string[]
+            if ((parsedKw.parsed as string[]).length) {
+                q.kind = parsedKw.parsed as string[]
             }
             break;
     
           case 'in':
-            if ((seg.parsed as ({id: string, deep: boolean})[]).length) {
+            if ((parsedKw.parsed as ({id: string, deep: boolean})[]).length) {
                 // TODO if uuid's deep op (*) is present will have to include all collections 
                 // in that parent
-                q.parent = (seg.parsed as ({id: string, deep: boolean})[]).map(r => r.id)
+                q.parent = (parsedKw.parsed as ({id: string, deep: boolean})[]).map(r => r.id)
             }
             break;
     
           case 'draft':
-            q.draft = parseBooleanKeyword(findSeg(seg));
+            q.draft = parseBooleanKeyword(findSeg(parsedKw));
             break;
     
           case 'archived':
-            parseBooleanOrTimestamp('archived', findSeg(seg), q);
+            parseBooleanOrTimestamp('archived', findSeg(parsedKw), q);
             break;
     
           case 'deleted':
-            parseBooleanOrTimestamp('deleted', findSeg(seg), q);
+            parseBooleanOrTimestamp('deleted', findSeg(parsedKw), q);
             break;
     
           case 'todo':
@@ -142,33 +143,33 @@ type SortField = 'created_at' | 'updated_at' | 'deleted_at' |
             break;
     
           case 'done':
-            q.completed = parseBooleanKeyword(findSeg(seg));
-            applyTimestampIfPresent('completed_at', findSeg(seg), q);
+            q.completed = parseBooleanKeyword(findSeg(parsedKw));
+            applyTimestampIfPresent('completed_at', findSeg(parsedKw), q);
             break;
     
           case 'created':
           case 'updated':
           case 'changed': {
             const f = `${kw}_at` as keyof SearchQuery;
-            const iv = timestampSegmentToInterval(findSeg(seg));
+            const iv = timestampSegmentToInterval(findSeg(parsedKw));
             if (iv) mergeIntervalField(q, f, iv);
             break;
           }
     
           case 'date': {
-            const iv = dateOrTimeSegmentToInterval(findSeg(seg), 'date');
+            const iv = dateOrTimeSegmentToInterval(findSeg(parsedKw), 'date');
             if (iv) q.date = iv;
             break;
           }
     
           case 'time': {
-            const iv = dateOrTimeSegmentToInterval(findSeg(seg), 'time');
+            const iv = dateOrTimeSegmentToInterval(findSeg(parsedKw), 'time');
             if (iv) q.time = iv;
             break;
           }
     
           case 'sort':
-            q.sort = parseSort(findSeg(seg));
+            q.sort = parseSort(findSeg(parsedKw));
             break;
     
             // TODO: implement when added
@@ -177,7 +178,26 @@ type SortField = 'created_at' | 'updated_at' | 'deleted_at' |
             // break;
     
           default:
-            // ignore unknown or future keywords for now
+            // handle utilities
+
+            // Handle kind
+            if (KINDS.includes(kw)) {
+                if (!q.kind) {
+                    q.kind = []
+                }
+                if (!q.kind.includes(kw)) {
+                    q.kind.push(kw)
+                }
+            }
+
+            // Handle today, yesterday
+            // TODO: analyze interferrence between @changed and today/yesterday
+            // TODO: analyze when two of them are provided: today and yesterday — perhaps we merge the interval?
+            if (['today', 'yesterday'].includes(kw)) {
+                const util = { util: kw } as DatePointUtility
+                const iv = singleTimestampTokenToInterval({kind: 'dateutil', value: util} as any)
+                if (iv) mergeIntervalField(q, 'changed_at', iv);
+            }
             break;
         }
       }

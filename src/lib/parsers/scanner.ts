@@ -1,4 +1,5 @@
 // src/parse/scanner.ts
+import { registry } from '../analyzers/registry.js';
 import type { ParseError, Segment } from './types.js';
 
 interface ScanResult {
@@ -8,14 +9,7 @@ interface ScanResult {
 
 const isIdent = (c: string) => /[A-Za-z0-9_-]/.test(c);
 
-export const VALID_KEYWORDS = [
-  'id','name','content','in','kind',
-  'created','updated','changed','deleted','archived','completed',
-  'date','time','sort',
-  // TODO: add limit when implemented
-  // 'limit'
-  'todo','done','draft'
-] as const;
+export const VALID_KEYWORDS = Object.keys(registry)
 
 
 /**

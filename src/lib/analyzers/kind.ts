@@ -2,9 +2,10 @@ import type {
     Segment,
     ParseError,
     ParsedKeyword,
+    Kind,
   } from '../parsers/types.js';
   
-  const KINDS = [
+  export const KINDS: Kind[] = [
     'note',
     'log',
     'project',

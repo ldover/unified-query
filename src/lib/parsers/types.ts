@@ -1,3 +1,14 @@
+export type Kind = 'note' |
+  'log' |
+  'project' |
+  'space' |
+  'collection' |
+  'issue' |
+  'task' |
+  'tab' |
+  'concept' |
+  'idea'
+
 export type Keyword =
     | 'head'
     | 'id' | 'kind' | 'name' | 'content'
@@ -7,7 +18,8 @@ export type Keyword =
     | 'created' | 'updated' | 'changed'
     | 'date' | 'time'
     | 'sort' | 'limit'
-    | `x-${string}`;          // unknown / future keywords
+    | 'today' | 'yesterday'
+    | Kind
 
 
 /* ----- shared base ----- */

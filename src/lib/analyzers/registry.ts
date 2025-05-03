@@ -19,7 +19,8 @@ import { analyzeUpdated   } from './updated.js';
 import { analyzeSort } from './sort.js';
 import { analyzeDraft } from './draft.js';
 import { analyzeTodo } from './todo.js';
-import { analyzeKind } from './kind.js';
+import { KINDS, analyzeKind } from './kind.js';
+import { createUtilAnalyzer } from './utilAnalyzer.js';
 
 /* -------------------------------------------------------------------------- */
 /* Shared signature                                                           */
@@ -55,4 +56,9 @@ export const registry: Record<string, KeywordAnalyser> = {
   todo: analyzeTodo,
   kind: analyzeKind,
   // TODO: add @limit analyzer
+  
+  /* utilities -------------------------------------------------------------- */
+  today: createUtilAnalyzer('today'),
+  yesterday: createUtilAnalyzer('yesterday'),
+  ...Object.fromEntries(KINDS.map(kind => [kind, createUtilAnalyzer(kind)])),
 };
