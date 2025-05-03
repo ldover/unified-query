@@ -119,13 +119,18 @@ export class Search {
         /*
          * Regex breakdown:
          *   @in                – literal "@in"
-         *   (?:\s+[\w-]+)*    – zero or more full words already typed (each
+         *   (?:\s+[\w-]+\*)*    – zero or more full words w/ optional * already typed (each
          *                        preceded by whitespace)
          *   \s+([\w-]*)        – the *current* (possibly empty) partial word right
          *                        before the cursor which we capture for replacement
          *   $                   – ensure we're at the end of the string (cursor)
+         * 
+         * Note: Not urgent, but should consider using parsed tokens to simplify completion logic, and in
+         * case the syntax changes, this completion source should remain the same.
          */
-        const match = /@in(?:\s+[\w-]+)*\s+([\w-]*)$/.exec(beforeCursor);
+        const match = /@in(?:\s+[\w-]+\*?)*\s+([\w-]*)$/.exec(beforeCursor);
+
+        // const match = /@in(?:\s+[\w-]+)*\s+([\w-]*)$/.exec(beforeCursor);
         if (!match) return null; // Not in an "@in" clause
     
         const partial = match[1] ?? '';
