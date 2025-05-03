@@ -7,7 +7,7 @@ import {
   autocompletion,
   CompletionContext,
 } from '@codemirror/autocomplete';
-import { highlighter } from './plugins.js';
+import { highlighter, uuidNamePlugin } from './plugins.js';
 import { theme } from './theme.js';
 import { searchLinter } from './lint.js';
 import { registry } from './analyzers/registry.js';
@@ -35,6 +35,10 @@ export class Search {
   private collections: Collection[] = [];
 
   constructor(private opts: SearchOptions) {
+    const map = new Map()
+    const UUID = 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa';
+
+    map.set(UUID, { name: 'collection 1'})
     this.view = new EditorView({
       state: EditorState.create({
         doc: '',
@@ -44,6 +48,7 @@ export class Search {
           theme,
           searchLinter,
           highlighter,
+          uuidNamePlugin(map),
           autocompletion({
             override: [
               this.keywordCompletion.bind(this),
