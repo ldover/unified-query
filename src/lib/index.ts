@@ -37,7 +37,7 @@ export class Search {
   constructor(private opts: SearchOptions) {
     this.view = new EditorView({
       state: EditorState.create({
-        doc: '@sort created',
+        doc: '',
         extensions: [
           basicSetup,
           keymap.of(defaultKeymap),
@@ -131,3 +131,5 @@ export class Search {
 //   }
 }
 
+export {toQuery} from './query.js'
+export {parse} from './parsers/index.js'

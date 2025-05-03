@@ -142,7 +142,7 @@ type SortField = 'created_at' | 'updated_at' | 'deleted_at' |
             break;
     
           case 'done':
-            q.completed = true;
+            q.completed = parseBooleanKeyword(findSeg(seg));
             applyTimestampIfPresent('completed_at', findSeg(seg), q);
             break;
     
