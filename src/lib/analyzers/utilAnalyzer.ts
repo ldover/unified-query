@@ -35,7 +35,7 @@ export function createUtilAnalyzer<K extends Keyword>(keyword: K) {
 /* -------------------------------------------------------------------------- */
 function invalidTokErr(tok: LexToken, keyword: string): ParseError {
   return {
-    message: `invalid token "${tok.raw}" for @${keyword} (expects a single boolean)`,
+    message: `invalid token "${tok.raw}" for @${keyword} (accepts no arguments)`,
     token: tok.raw,
     from: tok.from,
     to:   tok.to,
