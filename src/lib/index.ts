@@ -1,5 +1,5 @@
 // src/index.ts
-import { EditorState } from '@codemirror/state';
+import { EditorState, Compartment } from '@codemirror/state';
 import { EditorView, keymap, ViewUpdate } from '@codemirror/view';
 import { defaultKeymap } from '@codemirror/commands';
 import { basicSetup } from 'codemirror';
@@ -35,8 +35,12 @@ export class Search {
   private view: EditorView;
   private collections?: Map<string, Collection>
 
+  /** Compartment so we can hot‑swap the UUID‑name plugin when collections change */
+  private readonly collectionsCompartment = new Compartment();
+
+
   constructor(private opts: SearchOptions) {
-    this.collections = opts.collections
+    this.collections = opts.collections ?? new Map();
 
     this.view = new EditorView({
       state: EditorState.create({
@@ -47,7 +51,9 @@ export class Search {
           theme,
           searchLinter,
           highlighter,
-          uuidNamePlugin(opts.collections ?? new Map()),
+          // Collections‑aware plugin lives in a compartment for easy re‑config
+          this.collectionsCompartment.of(uuidNamePlugin(this.collections)),
+
           autocompletion({
             override: [
               this.keywordCompletion.bind(this),
@@ -67,8 +73,15 @@ export class Search {
     });
   }
 
-  setCollections(names: Map<string, Collection>) {
-    this.collections = names;
+  /** Replace all collections and refresh dependent plugins */
+  setCollections(newCollections: Map<string, Collection>) {
+    this.collections = newCollections;
+    // Reconfigure just the compartment, cheap & isolated
+    this.view.dispatch({
+      effects: this.collectionsCompartment.reconfigure(
+        uuidNamePlugin(this.collections)
+      )
+    });
   }
 
   destroy() {
