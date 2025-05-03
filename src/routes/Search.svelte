@@ -8,14 +8,22 @@
 
 	
 	onMount(() => {
-        const search = new Search({element: editorContainer, onChange: (query) => {
+		const collections = new Map()
+		collections.set('aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa', {name: 'Workshop', id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa'})
+		collections.set('aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaab', {name: 'Bridge', id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaab'})
+		collections.set('aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaac', {name: 'Study', id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaac'})
+        
+		// search.setCollections(collections)
+        const search = new Search({
+			element: editorContainer, 
+			collections,
+			onChange: (query) => {
 			const parsed = parse(query)
 
 			// TODO: note that we could use parsed.keywords instead of parsed segments
 			console.log(toQuery(parsed))
 
 		} })
-        search.setCollections(['collection 1', 'collection 2', 'collection 3'].map(c => ({id: c, name: c})))
 	});
 </script>
 

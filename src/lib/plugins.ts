@@ -111,14 +111,20 @@ export function uuidNamePlugin<Entity extends { name: string }>(
               // Maintain the order with surrounding text to prevent cursor jumps
               side: 0,
             });
-            builder.add(tok.from, tok.to, widget);
+            // Subtract 1 for the '*' if present in the uuid token (deep: true flag)
+            builder.add(tok.from, tok.to - (tok.deep ? 1 : 0), widget);
           }
         }
 
         return builder.finish();
       }
     },
-    { decorations: v => v.decorations }
+    { 
+        decorations: v => v.decorations,
+        provide: plugin => EditorView.atomicRanges.of(view => {
+            return view.plugin(plugin)?.decorations || Decoration.none
+        })
+    }
   );
 }
 

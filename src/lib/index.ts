@@ -1,4 +1,4 @@
-// src/Search.ts
+// src/index.ts
 import { EditorState } from '@codemirror/state';
 import { EditorView, keymap, ViewUpdate } from '@codemirror/view';
 import { defaultKeymap } from '@codemirror/commands';
@@ -17,6 +17,7 @@ export interface SearchOptions {
   element: HTMLElement;
   /** Called whenever the query text changes */
   onChange: (query: string) => void;
+  collections?: Map<string, Collection>
 }
 
 // Define available keywords
@@ -32,13 +33,11 @@ type Collection = {
 
 export class Search {
   private view: EditorView;
-  private collections: Collection[] = [];
+  private collections?: Map<string, Collection>
 
   constructor(private opts: SearchOptions) {
-    const map = new Map()
-    const UUID = 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa';
+    this.collections = opts.collections
 
-    map.set(UUID, { name: 'collection 1'})
     this.view = new EditorView({
       state: EditorState.create({
         doc: '',
@@ -48,7 +47,7 @@ export class Search {
           theme,
           searchLinter,
           highlighter,
-          uuidNamePlugin(map),
+          uuidNamePlugin(opts.collections ?? new Map()),
           autocompletion({
             override: [
               this.keywordCompletion.bind(this),
@@ -68,7 +67,7 @@ export class Search {
     });
   }
 
-  setCollections(names: Collection[]) {
+  setCollections(names: Map<string, Collection>) {
     this.collections = names;
   }
 
@@ -95,45 +94,37 @@ export class Search {
 
 
 	// 2) Create a completion source for "@in <…>"
-	private inCompletionSource(context: CompletionContext) {
-		// Try to match "@in " plus optional partial word right before the cursor
-		const before = context.matchBefore(/@in\s+([\w-]*)$/);
-		if (!before) return null;
-		// Only trigger when explicitly after "@in "
-		// start: the position where the match begins
-		const from = before.from + 4; // skip over "@in "
-		return {
-			from,
-			options: this.collections.map((c) => ({
-				label: c.name,
-				type: 'constant',
-				apply: c.name + ' '
-			}))
-		};
-	}
-
-//   /**
-//    * Offers `@in <collection>` completions based on
-//    * the current `this.collections` array.
-//    */
-//   private inCompletionSource(context: CompletionContext) {
-//     // look for "@in " plus optionally partial name
-//     const m = context.matchBefore(/@in\s+([\w-]*)$/);
-//     if (!m) return null;
-
-//     const prefix = m[1] || '';
-//     const from = m.from + 4; // position after "@in "
-
-//     const options = this.collections
-//       .filter((name) => name.toLowerCase().startsWith(prefix.toLowerCase()))
-//       .map((name) => ({
-//         label: name,
-//         type: 'constant',
-//         apply: name + ' '
-//       }));
-
-//     return { from, options };
-//   }
+    private inCompletionSource(context: CompletionContext) {
+        // Examine only the text before the cursor on the current line – we don't
+        // care about multiline matches here and this keeps the regex simpler.
+        const line = context.state.doc.lineAt(context.pos);
+        const beforeCursor = line.text.slice(0, context.pos - line.from);
+    
+        /*
+         * Regex breakdown:
+         *   @in                – literal "@in"
+         *   (?:\s+[\w-]+)*    – zero or more full words already typed (each
+         *                        preceded by whitespace)
+         *   \s+([\w-]*)        – the *current* (possibly empty) partial word right
+         *                        before the cursor which we capture for replacement
+         *   $                   – ensure we're at the end of the string (cursor)
+         */
+        const match = /@in(?:\s+[\w-]+)*\s+([\w-]*)$/.exec(beforeCursor);
+        if (!match) return null; // Not in an "@in" clause
+    
+        const partial = match[1] ?? '';
+        const from = context.pos - partial.length;
+    
+        const options = this.collections
+          ? [...this.collections.values()].map(c => ({
+              label: c.name,
+              type: 'constant',
+              apply: c.id
+            }))
+          : [];
+    
+        return { from, options };
+      }
 }
 
 export {toQuery} from './query.js'

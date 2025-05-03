@@ -17,7 +17,7 @@ const STRING_ONLY: MicroParser[]     = [];                // falls through to st
 const ID_ONLY         = [uuidParser];      // used by @id, @in
 
 export const lexerProfiles = {
-  head:         defaultParsers,  // free text
+  head:         STRING_ONLY,
   name:         STRING_ONLY,
   content:      STRING_ONLY,
   kind:         STRING_ONLY,
