@@ -3,20 +3,21 @@
 	import { Search } from '$lib/index.js';
 	import { parse } from '$lib/parsers/index.js';
 	import { toQuery } from '$lib/query.js';
+	import createTheme from '$lib/theme.js';
+	import { icons } from './icons.js';
 
 	let editorContainer: HTMLDivElement;
 
 	
 	onMount(() => {
-		const collections = new Map()
-		collections.set('aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa', {name: 'Workshop', id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa'})
-		collections.set('aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaab', {name: 'Bridge', id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaab'})
-		collections.set('aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaac', {name: 'Study', id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaac'})
-        
+		const theme = createTheme({
+			fontFamily: 'Roboto',
+			icons,
+      });
 		// search.setCollections(collections)
         const search = new Search({
 			element: editorContainer, 
-			collections,
+			theme,
 			onChange: (query) => {
 			const parsed = parse(query)
 
@@ -24,6 +25,16 @@
 			console.log(toQuery(parsed))
 
 		} })
+		
+		const collections = new Map()
+
+		collections.set('aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa', {kind: 'space', name: 'Workshop', id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa'})
+		collections.set('aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaab', {kind: 'space', name: 'Bridge', id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaab'})
+		collections.set('aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaac', {kind: 'project', name: 'Tiger', id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaac'})
+		collections.set('aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaad', {kind: 'collection', name: 'User tests', id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaad'})
+		
+
+        search.setCollections(collections)
 	});
 </script>
 

@@ -8,7 +8,7 @@ import {
   CompletionContext,
 } from '@codemirror/autocomplete';
 import { highlighter, uuidNamePlugin } from './plugins.js';
-import { theme } from './theme.js';
+import { createTheme } from './theme.js';
 import { searchLinter } from './lint.js';
 import { registry } from './analyzers/registry.js';
 
@@ -18,6 +18,7 @@ export interface SearchOptions {
   /** Called whenever the query text changes */
   onChange: (query: string) => void;
   collections?: Map<string, Collection>
+  theme?: any
 }
 
 // Define available keywords
@@ -29,6 +30,7 @@ const KEYWORDS = [
 type Collection = {
     id: string
     name: string
+    kind: 'space' | 'collection' | 'project'
 }
 
 export class Search {
@@ -42,6 +44,7 @@ export class Search {
   constructor(private opts: SearchOptions) {
     this.collections = opts.collections ?? new Map();
 
+    const theme = opts.theme ?? createTheme();
     this.view = new EditorView({
       state: EditorState.create({
         doc: '',
@@ -131,7 +134,7 @@ export class Search {
         const options = this.collections
           ? [...this.collections.values()].map(c => ({
               label: c.name,
-              type: 'constant',
+              type: c.kind,
               apply: c.id
             }))
           : [];
@@ -140,5 +143,7 @@ export class Search {
       }
 }
 
+
 export {toQuery} from './query.js'
 export {parse} from './parsers/index.js'
+export {createTheme} from './theme.js'

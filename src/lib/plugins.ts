@@ -33,7 +33,6 @@ export const highlighter = ViewPlugin.fromClass(
 
         if (seg.keyword != 'head') {
             /* keyword span (“@” + ident) ----------------------------------- */
-            console.log(seg.keyword, seg.from, seg.from + seg.keyword.length)
             builder.add(seg.from, seg.from + seg.keyword.length + 1, decoKeyword)
         }
       }
