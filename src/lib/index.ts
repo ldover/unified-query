@@ -76,6 +76,10 @@ export class Search {
     });
   }
 
+	focus(): void {
+		this.view.focus();
+	}
+
   /** Replace all collections and refresh dependent plugins */
   setCollections(newCollections: Map<string, Collection>) {
     this.collections = newCollections;

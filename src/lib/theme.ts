@@ -109,7 +109,6 @@ export function createTheme(opts: SearchThemeOptions = {}): Extension {
 
 	const addStyles = Object.fromEntries(iconStyles)
 
-  console.log({addStyles})
   const css: Record<string, StyleSpec> = {
     // Root panel styled like an input
     '&': {
@@ -124,7 +123,10 @@ export function createTheme(opts: SearchThemeOptions = {}): Extension {
       fontSize: o.fontSize
     },
     '&.cm-focused': { outline: 'none' },
-    '.cm-content': { padding: '4px 0' },
+    '.cm-content': { 
+      padding: '4px 0', 
+			fontFamily: opts.fontFamily,
+    },
     '.cm-activeLine': { backgroundColor: 'transparent' },
     '.cm-gutters': { display: 'none' },
 
