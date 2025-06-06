@@ -1,5 +1,5 @@
 // src/index.ts
-import { EditorState, Compartment } from '@codemirror/state';
+import { EditorState, Compartment, Prec } from '@codemirror/state';
 import { EditorView, keymap, ViewUpdate } from '@codemirror/view';
 import { defaultKeymap } from '@codemirror/commands';
 import { basicSetup } from 'codemirror';
@@ -12,11 +12,14 @@ import { createTheme } from './theme.js';
 import { searchLinter } from './lint.js';
 import { registry } from './analyzers/registry.js';
 
+type Key = 'Enter' | 'ArrowDown' | 'ArrowUp'
+
 export interface SearchOptions {
   /** The DOM element to mount the editor into */
   element: HTMLElement;
   /** Called whenever the query text changes */
   onChange: (query: string) => void;
+  onKeydown?: (key: Key) => void;
   collections?: Map<string, Collection>
   theme?: any
 }
@@ -44,13 +47,29 @@ export class Search {
   constructor(private opts: SearchOptions) {
     this.collections = opts.collections ?? new Map();
 
+    const singleLine = EditorState.transactionFilter.of(tr =>
+      tr.newDoc.lines > 1 ? [] : tr        // drop any edit that would add a row
+    );
+
     const theme = opts.theme ?? createTheme();
     this.view = new EditorView({
       state: EditorState.create({
         doc: '',
         extensions: [
+          singleLine,
           basicSetup,
-          keymap.of(defaultKeymap),
+          Prec.highest(          // top-priority key-map (otherwise Enter is ignored)
+            keymap.of(['Enter', 'ArrowDown', 'ArrowUp'].map(key => ({
+              key,
+              run: () => {
+                opts.onKeydown?.(key as Key)
+                return true;
+              }
+            })).concat([{
+              key: "Mod-f",
+              run: () => true  // handled -> CM’s search panel won’t open
+            }])
+          )),
           theme,
           searchLinter,
           highlighter,

@@ -7,7 +7,10 @@ export type Kind = 'note' |
   'task' |
   'tab' |
   'concept' |
-  'idea'
+  'idea' |
+  'aichat' |
+  'aiprompt' |
+  'airesponse'
 
 export type Keyword =
     | 'head'

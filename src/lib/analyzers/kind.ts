@@ -15,7 +15,10 @@ import type {
     'task',
     'tab',
     'concept',
-    'idea' // TODO: check that all kinds are here
+    'idea',
+    'aichat',
+    'aiprompt',
+    'airesponse',
 ];
 
   /**

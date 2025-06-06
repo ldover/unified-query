@@ -18,6 +18,7 @@
         const search = new Search({
 			element: editorContainer, 
 			theme,
+			onKeydown: (key) => { console.log({key})},
 			onChange: (query) => {
 			const parsed = parse(query)
 
