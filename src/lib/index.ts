@@ -18,6 +18,7 @@ export interface SearchOptions {
   /** The DOM element to mount the editor into */
   element: HTMLElement;
   /** Called whenever the query text changes */
+  query?: string;
   onChange: (query: string) => void;
   onKeydown?: (key: Key) => void;
   collections?: Map<string, Collection>
@@ -54,7 +55,7 @@ export class Search {
     const theme = opts.theme ?? createTheme();
     this.view = new EditorView({
       state: EditorState.create({
-        doc: '',
+        doc: opts.query ?? '',
         extensions: [
           singleLine,
           basicSetup,

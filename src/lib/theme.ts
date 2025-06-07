@@ -134,6 +134,13 @@ export function createTheme(opts: SearchThemeOptions = {}): Extension {
     '.cm-entity-name': o.entityName,
     '.cm-qs-keyword': o.keyword,
 
+    // Matched selection
+    '&.cm-focused .cm-matchingBracket, &.cm-focused .cm-nonmatchingBracket': {
+			backgroundColor: 'transparent' // Override highlighting for matching bracket
+		},
+		'.cm-selectionMatch': {
+      backgroundColor: 'transparent' // Override highlighting text that matches selection
+		},
     /* ----------------------- Autocomplete tooltip -------------------- */
     '.cm-tooltip': {
       border: `1px solid ${o.autocomplete.border}`,

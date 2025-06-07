@@ -17,6 +17,7 @@
 		// search.setCollections(collections)
         const search = new Search({
 			element: editorContainer, 
+			query: '@kind log @yesterday',
 			theme,
 			onKeydown: (key) => { console.log({key})},
 			onChange: (query) => {

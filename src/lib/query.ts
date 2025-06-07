@@ -88,7 +88,7 @@ type SortField = 'created_at' | 'updated_at' | 'deleted_at' |
     /*                            main converter                              */
     /* ======================================================================= */
     
-    export function toQuery(res: ParseResult): SearchQuery {
+    export function toQuery(res: ParseResult, head?: 'content' | 'name'): SearchQuery {
       const findSeg = (k: ParsedKeyword) => res.segments.find(s => s.keyword == k.keyword) as Segment
 
       const q: SearchQuery = {};
@@ -98,6 +98,9 @@ type SortField = 'created_at' | 'updated_at' | 'deleted_at' |
     
         switch (kw) {
           case 'head':
+            q[head ?? 'name'] = parsedKw.parsed as string
+            break;
+          
           case 'name':
             q.name = parsedKw.parsed as string
             break;
