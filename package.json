@@ -1,6 +1,6 @@
 {
 	"name": "unified-query",
-	"version": "0.0.9",
+	"version": "0.0.10",
 	"author": "Luka Dover",
 	"email": "luka.dover@gmail.com",
 	"description": "Composable search input with autocompletion and a rich query-language parser for the Unified Data System",
