@@ -1,7 +1,6 @@
 // src/index.ts
-import { EditorState, Compartment, Prec } from '@codemirror/state';
+import { EditorState, Compartment, Prec, EditorSelection } from '@codemirror/state';
 import { EditorView, keymap, ViewUpdate } from '@codemirror/view';
-import { defaultKeymap } from '@codemirror/commands';
 import { basicSetup } from 'codemirror';
 import {
   autocompletion,
@@ -19,6 +18,7 @@ export interface SearchOptions {
   element: HTMLElement;
   /** Called whenever the query text changes */
   query?: string;
+  selection?: EditorSelection;
   onChange: (query: string) => void;
   onKeydown?: (key: Key) => void;
   collections?: Map<string, Collection>
@@ -52,10 +52,12 @@ export class Search {
       tr.newDoc.lines > 1 ? [] : tr        // drop any edit that would add a row
     );
 
+    const query = opts.query ?? ''
     const theme = opts.theme ?? createTheme();
     this.view = new EditorView({
       state: EditorState.create({
-        doc: opts.query ?? '',
+        doc: query,
+        selection: opts.selection ?? EditorSelection.single(query.length),
         extensions: [
           singleLine,
           basicSetup,

@@ -37,6 +37,8 @@
 		
 
         search.setCollections(collections)
+
+		search.focus()
 	});
 </script>
 
