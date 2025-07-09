@@ -9,6 +9,6 @@ export const searchLinter = linter(view => {
     to:   e.to,
     severity: 'error',
     message: e.message,
-    source: 'unified-search'
+    source: 'unified-query'
   }));
 });

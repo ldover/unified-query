@@ -1,9 +1,9 @@
-# unified-search
+# unified-query
 
 > ⚠️ **Work in progress**\
-> *unified-search* is still under active development and forms part of the **Unified Data System** (not yet open‑sourced). Breaking changes are likely until that foundation is public.
+> *unified-query* is still under active development and forms part of the **Unified Data System** (not yet open‑sourced). Breaking changes are likely until that foundation is public.
 
-Svelte search input powered by CodeMirror 6 and a custom query language for the Unified Data System.
+Search input powered by CodeMirror 6 and a custom query language for the Unified Data System.
 
 ---
 
@@ -15,7 +15,7 @@ npm i unified-search
 
 ## Quick start
 
-```svelte
+```js
 const theme = createTheme({
     icons,
     fontFamily: 'Roboto, sans-serif',

@@ -1,9 +1,9 @@
 {
-	"name": "unified-search",
+	"name": "unified-query",
 	"version": "0.0.9",
 	"author": "Luka Dover",
 	"email": "luka.dover@gmail.com",
-	"description": "Composable Svelte search input with autocompletion and a rich query-language parser",
+	"description": "Composable search input with autocompletion and a rich query-language parser for the Unified Data System",
 	"keywords": [
 		"svelte",
 		"search",
@@ -16,7 +16,7 @@
 	},
 	"repository": {
 	  "type": "git",
-	  "url": "git+https://github.com/ldover/unified-search.git"
+	  "url": "git+https://github.com/ldover/unified-query.git"
 	},
 	"license": "Unlicense",
 	"scripts": {
