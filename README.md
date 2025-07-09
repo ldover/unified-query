@@ -1,58 +1,112 @@
-# create-svelte
+# unified-search
 
-Everything you need to build a Svelte library, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
+> ⚠️ **Work in progress**\
+> *unified-search* is still under active development and forms part of the **Unified Data System** (not yet open‑sourced). Breaking changes are likely until that foundation is public.
 
-Read more about creating a library [in the docs](https://kit.svelte.dev/docs/packaging).
+Svelte search input powered by CodeMirror 6 and a custom query language for the Unified Data System.
 
-## Creating a project
+---
 
-If you're seeing this, you've probably already done this step. Congrats!
-
-```bash
-# create a new project in the current directory
-npm create svelte@latest
-
-# create a new project in my-app
-npm create svelte@latest my-app
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+## Install
 
 ```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+npm i unified-search
 ```
 
-Everything inside `src/lib` is part of your library, everything inside `src/routes` can be used as a showcase or preview app.
+## Quick start
 
-## Building
+```svelte
+const theme = createTheme({
+    icons,
+    fontFamily: 'Roboto, sans-serif',
+    keyword: { color: '#268bd2', fontWeight: '600' },
+    entityName: { color: 'black' }
+})
 
-To build your library:
-
-```bash
-npm run package
+const search = new Search({ 
+    element: e, 
+    query: '@kind note @yesterday',
+    onChange: (q) => handleSearch(q), 
+    theme 
+})
 ```
 
-To create a production version of your showcase app:
+## Query language spec
 
-```bash
-npm run build
+### Basics
+
+- The **head of the string** searches by name, e.g. `Search: apple` ⇒ `@name apple`.
+
+### Keywords
+
+| Keyword                      | Usage                                                       | Notes |
+| ---------------------------- | ----------------------------------------------------------- | ----- |
+| `@id <id…>`                  | Match specific entity IDs (UUID v4).                        |       |
+| `@name <text>`               | Exact‑match name. Alias of `@content`.                      |       |
+| `@content <text>`            | Reads until the next `@`. Escape `@` with `\@`.             |       |
+| `@kind <kind…>`              | Filter by kinds (`note`, `log`, `space`, …).                |       |
+| `@in <id…>`                  | Contained in parent IDs. Add `*` for deep search (`id2*`).  |       |
+| `@todo`                      | Shortcut for `@completed false`.                            |       |
+| `@done <date…>\|<bool>`      | Completed on date(s) or flag. Narrows to completable kinds. |       |
+| `@draft [bool]`              | Draft flag (default `true`).                                |       |
+| `@archived [date…]\|[bool]`  | Archive date or flag.                                       |       |
+| `@deleted [date…]\|[bool]`   | Deletion date or flag (default `true`).                     |       |
+| `@created <date…>`           | Creation date(s).                                           |       |
+| `@updated <date…>`           | Update date(s).                                             |       |
+| `@changed <date…>`           | Any of created/updated/deleted/archived on date(s).         |       |
+| `@date <date…>`              | Explicit date field (e.g., logs).                           |       |
+| `@time <time…>`              | Explicit time field.                                        |       |
+| `@sort <field[:asc\|desc]…>` | Default: `name asc`.                                        |       |
+| `@limit [n]`                 | Default `100`.                                              |       |
+| Shorthands                   | `@note`, `@log`, … ⇒ `@kind note log`.                      |       |
+
+### Intervals
+
+Use `<` or `>` before a value:
+
+- `<2024/01` — before January 2024 (exclusive)
+- `>12:00`   — after 12:00 (inclusive)
+
+Only one `<` and one `>` per field.
+
+### Date formats
+
+- `YYYY`          → `2024`
+- `YYYY/MM`      → `2024/01`
+- `YYYY/MM/DD` → `2024/01/01`
+
+These map to half‑open ranges: `2024` ⇒ `>2024 <2025`.
+
+### Time formats
+
+- `HH[:mm]` (24h) — `12`, `12:01`
+- `h[:mm][am\|pm]` (12h) — `12pm`, `12:00am`
+
+Example: `12pm` ⇒ `>12:00 <13:00`.
+
+### Date + time
+
+Combine freely, e.g.:
+
+```
+@created 2024 >12pm   # entities created in the afternoon of 2024
 ```
 
-You can preview the production build with `npm run preview`.
+### Date‑time literal
 
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+Use long form:
 
-## Publishing
+- `YYYY/MM/DD-HH:mm` — `>2024/01/01-12:00`
 
-Go into the `package.json` and give your package the desired name through the `"name"` option. Also consider adding a `"license"` field and point it to a `LICENSE` file which you can create from a template (one popular option is the [MIT license](https://opensource.org/license/mit/)).
+### Timezone
 
-To publish your library to [npm](https://www.npmjs.com):
+Currently assumed **user‑local**. Cross‑TZ querying is TBD.
 
-```bash
-npm publish
-```
+### Utility tokens
+
+Valid after time fields (`@created`, `@updated`, `@deleted`, `@archived`, `@changed`, `@completed`):
+
+- `today`, `yesterday`
+- `lastNdays`, `lastNweeks`
+- Weekdays: `mon`‑`sun` / `Monday`‑`Sunday`
+- Months: `jan`‑`dec` / `January`‑`December`
