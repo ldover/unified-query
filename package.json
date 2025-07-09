@@ -1,10 +1,28 @@
 {
 	"name": "unified-search",
 	"version": "0.0.9",
+	"author": "Luka Dover",
+	"email": "luka.dover@gmail.com",
+	"description": "Composable Svelte search input with autocompletion and a rich query-language parser",
+	"keywords": [
+		"svelte",
+		"search",
+		"autocomplete",
+		"codemirror",
+		"query-language"
+	],
+	"publishConfig": {
+	  "access": "public"
+	},
+	"repository": {
+	  "type": "git",
+	  "url": "git+https://github.com/ldover/unified-search.git"
+	},
+	"license": "Unlicense",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build && npm run package",
-		"pack": "vite build && npm run package && npm pack",
+		"pack": "npm run build && npm pack",
 		"preview": "vite preview",
 		"package": "svelte-kit sync && svelte-package && publint",
 		"prepublishOnly": "npm run package",
@@ -24,6 +42,7 @@
 	},
 	"files": [
 		"dist",
+		"README.md",
 		"!dist/**/*.test.*",
 		"!dist/**/*.spec.*"
 	],
